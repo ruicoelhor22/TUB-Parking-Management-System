@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Alertas</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Estilos CSS */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            /* Remover margem padrão do corpo */
+        }
+
+        header {
+            background-color: #0071bc;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            box-shadow: 0 4px 6px -6px black;
+            margin-bottom: 20px;
+            /* Espaço abaixo do cabeçalho */
+        }
+
+        header img {
+            width: 200px;
+            height: 125px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        .navbar-brand img {
+            width: 200px;
+            height: 125px;
+        }
+
+        .navbar-text {
+            color: #0071bc;
+            font-weight: bold;
+        }
+
+        .navbar-profile {
+            display: flex;
+            align-items: center;
+            color: #555;
+            font-size: 18px;
+        }
+
+        .navbar-profile img {
+            width: 50px;
+            height: 50px;
+            margin-left: 10px;
+            border-radius: 50%;
+        }
+
+        .navbar-profile span {
+            font-weight: bold;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .container {
+            margin-top: 20px;
+            box-shadow: 0 4px 6px -6px black;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: white;
+        }
+
+        .table th,
+        .table td {
+            text-align: center;
+            vertical-align: middle;
+            font-size: 20px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HTML -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light justify-content-between">
+            <div class="container">
+                <a class="navbar-brand" href="#">
+                    <img src="imageTUB.png" alt="Logotipo da Tub">
+                </a>
+
+                <div class="navbar-profile">
+                    <span>Coimas</span>
+                </div>
+
+                <div class="navbar-profile">
+                    <span>Informação</span>
+                </div>
+
+                <div class="navbar-profile">
+                    <span>Rui Coelho (Fiscal 1)</span>
+                    <img src="perfil.jpg" alt="Perfil">
+                </div>
+
+            </div>
+        </nav>
+    </header>
+
+    <style>
+        .descricao-vermelha {
+            color: red;
+        }
+    </style>
+
+    <div class="container">
+        <h1 class="text-center">Lista de Alertas - Rua de Santa Margarida</h1>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID Alerta</th>
+                        <th>Data</th>
+                        <th class="descricao-vermelha">Descrição</th>
+                        <!-- <th>Local</th> -->
+                    </tr>
+                </thead>
+                <tbody id="alertasTableBody">
+                    <!-- As linhas da tabela serão adicionadas dinamicamente aqui -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            obterListaAlertas();
+        });
+    
+        function obterListaAlertas() {
+            // Faça a requisição à API para obter novos alertas
+            fetch('http://localhost:8080/api/v3/kafka/getAlertas', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro na requisição: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Exibir alertas
+                exibirAlertas(data);
+            })
+            .catch(error => console.error('Erro na requisição:', error));
+        }
+    
+        function exibirAlertas(data) {
+            const tableBody = document.getElementById('alertasTableBody');
+            tableBody.innerHTML = ""; // Limpa o conteúdo atual da tabela
+    
+            data.forEach((alerta, index) => {
+                const newRow = tableBody.insertRow();
+                const alertaParts = alerta.split(" - ");
+                
+                // Verifica se o formato da data é "HH:mm:ss"
+                const match = alertaParts[1].match(/^(\d{2}:\d{2}:\d{2})$/);
+    
+                if (match) {
+                    const currentDate = new Date();
+                    const timeParts = match[1].split(':');
+                    currentDate.setHours(parseInt(timeParts[0], 10));
+                    currentDate.setMinutes(parseInt(timeParts[1], 10));
+                    currentDate.setSeconds(parseInt(timeParts[2], 10));
+    
+                    const descricao = alertaParts[0];
+    
+                    newRow.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${formatDate(currentDate)}</td>
+                        <td>${descricao}</td>
+                    `;
+                } else {
+                    console.error('Formato de data inválido:', alerta);
+                }
+            });
+        }
+    
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+            return date.toLocaleDateString('pt-BR', options);
+        }
+    </script>
+  
+    
+
+
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core"></script>
+
+</body>
